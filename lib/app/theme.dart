@@ -32,6 +32,32 @@ abstract final class AppColors {
 
   static const Color buttonPrimary = Color(0xFF141414);
   static const Color onButtonPrimary = Color(0xFFFFFFFF);
+
+  /// Circular "%" and settings buttons sitting beside the summary pill.
+  static const Color controlSurface = Color(0xF2FFFFFF);
+  static const Color controlBorder = Color(0x1A141414);
+  static const Color controlShadow = Color(0x14141414);
+
+  /// Red dot marking a pill option that needs attention.
+  static const Color badge = Color(0xFFE5484D);
+
+  /// Cashback banner at the bottom of the upper section.
+  static const Color cashbackSurface = Color(0xFFFFFFFF);
+  static const Color cashbackBorder = Color(0x1A8A1247);
+  static const Color cashbackIconSurface = Color(0x148A1247);
+
+  /// Decorative marks painted into the upper background. The alphas are kept
+  /// deliberately low so the artwork can never hurt readability.
+  static const Color decorInk = Color(0x12141414);
+  static const Color decorAccent = Color(0x148A1247);
+  static const Color decorCool = Color(0x0F2F5BFF);
+
+  /// Credit-card chrome: chip, "Pay now" pill and the card hairline.
+  static const Color chipGold = Color(0xFFE8D2A2);
+  static const Color chipGoldDeep = Color(0xFFB3924F);
+  static const Color chipLine = Color(0x33000000);
+  static const Color payNowSurface = Color(0xFFFFFFFF);
+  static const Color onPayNowSurface = Color(0xFF141414);
 }
 
 /// Corner radii, kept together so the shapes stay consistent.
@@ -51,6 +77,19 @@ abstract final class AppSpacing {
   static const double lg = 16;
   static const double xl = 24;
   static const double xxl = 32;
+}
+
+/// Fixed sizes shared by more than one widget, so no widget has to hardcode
+/// them.
+abstract final class AppSizes {
+  /// Width-to-height ratio of a payment card (ISO/IEC 7810 ID-1).
+  static const double cardAspectRatio = 1.586;
+
+  /// Side of the circular "%" and settings buttons.
+  static const double control = 40;
+
+  /// Slightly rounded square used by the cashback icon.
+  static const double bannerIcon = 28;
 }
 
 /// Timings for the Phase 1 micro-interactions.
@@ -126,6 +165,85 @@ abstract final class AppTextStyles {
     height: 1.1,
     color: AppColors.cardTextPrimary,
   );
+
+  /// Glyph shown inside the circular "%" button.
+  static const TextStyle controlGlyph = TextStyle(
+    fontSize: 15,
+    fontWeight: FontWeight.w800,
+    height: 1.1,
+    color: AppColors.textPrimary,
+  );
+
+  /// Promotional sentence of the cashback banner.
+  static const TextStyle cashback = TextStyle(
+    fontSize: 13,
+    fontWeight: FontWeight.w600,
+    height: 1.25,
+    color: AppColors.accent,
+  );
+
+  /// Emphasised part of the cashback sentence, e.g. the amount.
+  static const TextStyle cashbackAmount = TextStyle(
+    fontSize: 13,
+    fontWeight: FontWeight.w800,
+    height: 1.25,
+    color: AppColors.accent,
+  );
+
+  /// Masked card number. The colour is overridden per card.
+  static const TextStyle cardNumber = TextStyle(
+    fontSize: 13.5,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 1.8,
+    height: 1.1,
+    color: AppColors.cardTextPrimary,
+  );
+
+  /// Card holder name printed at the bottom of a card.
+  static const TextStyle cardHolder = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 1.1,
+    height: 1.15,
+    color: AppColors.cardTextPrimary,
+  );
+
+  /// Outstanding amount shown on a card.
+  static const TextStyle cardDueAmount = TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.w700,
+    letterSpacing: -0.2,
+    height: 1.1,
+    color: AppColors.cardTextPrimary,
+    fontFeatures: <FontFeature>[FontFeature.tabularFigures()],
+  );
+
+  /// Due date line under [cardDueAmount].
+  static const TextStyle cardDueDate = TextStyle(
+    fontSize: 9.5,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 1.2,
+    height: 1.2,
+    color: AppColors.cardTextSecondary,
+  );
+
+  /// Label of the white "Pay now" pill drawn on a card.
+  static const TextStyle payNow = TextStyle(
+    fontSize: 12.5,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 0.2,
+    height: 1.1,
+    color: AppColors.onPayNowSurface,
+  );
+
+  /// Fallback wordmark used when a card has no dedicated logo artwork.
+  static const TextStyle cardWordmark = TextStyle(
+    fontSize: 15,
+    fontWeight: FontWeight.w800,
+    letterSpacing: 1.4,
+    height: 1.15,
+    color: AppColors.cardTextPrimary,
+  );
 }
 
 /// Background paintings used by the screen and the bill card.
@@ -153,12 +271,30 @@ abstract final class AppGradients {
     radius: 0.95,
     colors: <Color>[AppColors.cardGlow, AppColors.cardGlowFade],
   );
+
+  /// Wash behind the upper section.
+  ///
+  /// Off-white at the top, cooling into a light grey and finally fading to
+  /// transparent, so the section blends seamlessly into the screen gradient
+  /// that paints the card area below it.
+  static const LinearGradient upperSection = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: <Color>[Color(0xFFFFFFFF), Color(0xFFF4F4F6), Color(0x00F4F4F6)],
+    stops: <double>[0, 0.7, 1],
+  );
+
+  /// Golden sheen of the card chip.
+  static const LinearGradient chip = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: <Color>[AppColors.chipGold, AppColors.chipGoldDeep],
+  );
 }
 
 /// Material theme of the app.
-///
-/// Phase 1 targets the light design from the reference only.
 abstract final class AppTheme {
+  /// Light theme configuration.
   static ThemeData get light {
     final ThemeData base = ThemeData(
       useMaterial3: true,
@@ -178,6 +314,34 @@ abstract final class AppTheme {
         secondary: AppColors.accent,
         surface: AppColors.surface,
         onSurface: AppColors.textPrimary,
+      ),
+      splashFactory: InkRipple.splashFactory,
+    );
+  }
+
+  /// Dark theme configuration.
+  static ThemeData get dark {
+    final ThemeData base = ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      scaffoldBackgroundColor: const Color(0xFF121212),
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: AppColors.accent,
+        brightness: Brightness.dark,
+      ),
+    );
+
+    return base.copyWith(
+      textTheme: base.textTheme.apply(
+        bodyColor: const Color(0xFFF2F2F7),
+        displayColor: const Color(0xFFF2F2F7),
+      ),
+      colorScheme: base.colorScheme.copyWith(
+        primary: AppColors.accent,
+        onPrimary: Colors.white,
+        secondary: AppColors.accentDeep,
+        surface: const Color(0xFF1C1C1E),
+        onSurface: const Color(0xFFF2F2F7),
       ),
       splashFactory: InkRipple.splashFactory,
     );

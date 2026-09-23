@@ -10,7 +10,7 @@ class PayBillButton extends StatelessWidget {
   const PayBillButton({
     super.key,
     required this.onPressed,
-    this.label = 'Pay Bill',
+    this.label = 'Pay bill',
   });
 
   final VoidCallback onPressed;
@@ -36,9 +36,7 @@ class PayBillButton extends StatelessWidget {
         minimumSize: const Size(0, 48),
         padding: const EdgeInsets.symmetric(horizontal: 34, vertical: 14),
         splashFactory: InkRipple.splashFactory,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.button),
-        ),
+        shape: const StadiumBorder(),
         textStyle: labelStyle,
       ),
       child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),

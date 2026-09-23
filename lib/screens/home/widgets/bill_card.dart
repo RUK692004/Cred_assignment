@@ -7,8 +7,9 @@ import '../../../models/bill.dart';
 /// Card showing a single bill, built from a [Bill] model so the UI never
 /// hardcodes bill data.
 ///
-/// Phase 1 renders one card with no gestures attached. Phase 2 stacks several
-/// of these and adds the swipe / expand interactions on top.
+/// Phase 2 superseded it on the home screen - the lower section now renders the
+/// bank credit cards - but the widget is untouched and still tested, so it can
+/// be reused for a bills view later.
 class BillCard extends StatelessWidget {
   const BillCard({super.key, required this.bill});
 

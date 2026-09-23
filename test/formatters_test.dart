@@ -20,4 +20,17 @@ void main() {
       expect(formatRupees(-2450), '-₹2,450');
     });
   });
+
+  group('formatRupeesWithPaise', () {
+    test('always keeps the two paise digits', () {
+      expect(formatRupeesWithPaise(50000), '₹50,000.00');
+      expect(formatRupeesWithPaise(0), '₹0.00');
+      expect(formatRupeesWithPaise(999), '₹999.00');
+    });
+
+    test('groups the same way as formatRupees', () {
+      expect(formatRupeesWithPaise(1234567.5), '₹12,34,567.50');
+      expect(formatRupeesWithPaise(-50000), '-₹50,000.00');
+    });
+  });
 }

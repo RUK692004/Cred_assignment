@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../app/theme.dart';
-import '../../models/bill.dart';
+import '../../data/credit_cards.dart';
+import '../../models/credit_card.dart';
 import 'widgets/lower_section.dart';
 import 'widgets/summary_pill.dart';
 import 'widgets/upper_section.dart';
@@ -12,18 +13,15 @@ import 'widgets/upper_section.dart';
 /// desktop, where the screen keeps its phone-like proportions.
 const double _maxContentWidth = 480;
 
-/// Phase 1 placeholder values. A real data source replaces them in a later
-/// phase - the widgets below only receive the values.
-const double _statementDueAmount = 12450;
+/// Phase 2 placeholder value for the "Recent Spends" tab.
 const double _recentSpendsAmount = 4280;
-const int _cardsInStatement = 1;
 
-/// Home screen.
+/// Home screen of the credit-card dashboard.
 ///
-/// Composed of two independent sections:
-///  * [UpperSection]: the static summary header (never scrolls).
-///  * [LowerSection]: the card area, which Phase 2 turns into an animated
-///    stack of cards.
+/// The screen keeps the Phase 1 split:
+///  * [UpperSection] holds the statement header. It stays pinned to the top.
+///  * [LowerSection] holds the bank cards. Phase 2 renders them as a plain
+///    vertical list, so scrolling reveals the cards one after another.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -32,16 +30,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  /// The only piece of state Phase 1 needs: which summary tab is selected.
+  /// The only piece of state the screen owns: which summary tab is selected.
   int _selectedTab = kTotalDueTab;
-
-  /// The single bill shown in the lower section for Phase 1.
-  static const Bill _bill = Bill(
-    title: 'Electricity',
-    provider: 'Kerala State Electricity Board',
-    amount: 2450,
-    dueText: 'Due in 4 days',
-  );
 
   void _handleTabSelected(int index) {
     if (index == _selectedTab) {
@@ -50,13 +40,25 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => _selectedTab = index);
   }
 
-  /// Placeholder action: Phase 1 intentionally pays nothing.
-  void _handlePayBill() {
-    // The payment flow lands in a later phase.
-  }
+  // Placeholder actions. Phase 2 only proves that the controls react; no
+  // payment, navigation or network work happens yet.
+  void _handlePayBill() {}
+
+  void _handlePayNow(CreditCard card) {}
+
+  void _handleRewards() {}
+
+  void _handleSettings() {}
+
+  void _handleCashback() {}
 
   @override
   Widget build(BuildContext context) {
+    // Both figures are derived from the card data, so the header can never
+    // disagree with the list underneath it.
+    final double statementDue = totalDueOf(kCreditCards);
+    final int cardsWithDue = cardsWithDueCount(kCreditCards);
+
     return Scaffold(
       body: DecoratedBox(
         decoration: const BoxDecoration(gradient: AppGradients.screen),
@@ -69,12 +71,20 @@ class _HomeScreenState extends State<HomeScreen> {
                   UpperSection(
                     selectedTab: _selectedTab,
                     onTabSelected: _handleTabSelected,
-                    statementDue: _statementDueAmount,
-                    cardCount: _cardsInStatement,
+                    statementDue: statementDue,
+                    cardCount: cardsWithDue,
                     recentSpends: _recentSpendsAmount,
                     onPayBill: _handlePayBill,
+                    onRewards: _handleRewards,
+                    onSettings: _handleSettings,
+                    onCashback: _handleCashback,
                   ),
-                  const Expanded(child: LowerSection(bill: _bill)),
+                  Expanded(
+                    child: LowerSection(
+                      cards: kCreditCards,
+                      onPayNow: _handlePayNow,
+                    ),
+                  ),
                 ],
               ),
             ),

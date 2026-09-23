@@ -80,7 +80,7 @@ class SummaryContent extends StatelessWidget {
   }
 }
 
-/// The primary Phase 1 state: the amount the user has to pay right now.
+/// The primary state: the amount the user has to pay right now.
 class StatementDue extends StatelessWidget {
   const StatementDue({super.key, required this.amount, this.cardCount = 1});
 
@@ -102,7 +102,19 @@ class StatementDue extends StatelessWidget {
           textAlign: TextAlign.center,
         ),
         SizedBox(height: 12 * scale),
-        _HeroAmount(amount: amount),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Flexible(child: _HeroAmount(amount: amount, withPaise: true)),
+            SizedBox(width: 6 * scale),
+            Icon(
+              Icons.keyboard_arrow_down_rounded,
+              size: 26 * scale,
+              color: AppColors.textSecondary,
+              semanticLabel: 'Change statement',
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -140,9 +152,12 @@ class RecentSpendsPlaceholder extends StatelessWidget {
 
 /// Hero number shared by both tabs so the two states line up exactly.
 class _HeroAmount extends StatelessWidget {
-  const _HeroAmount({required this.amount});
+  const _HeroAmount({required this.amount, this.withPaise = false});
 
   final double amount;
+
+  /// `true` keeps the two paise digits (`₹50,000.00`), like a bank statement.
+  final bool withPaise;
 
   @override
   Widget build(BuildContext context) {
@@ -151,7 +166,7 @@ class _HeroAmount extends StatelessWidget {
     return FittedBox(
       fit: BoxFit.scaleDown,
       child: Text(
-        formatRupees(amount),
+        withPaise ? formatRupeesWithPaise(amount) : formatRupees(amount),
         maxLines: 1,
         style: AppTextStyles.heroAmount.copyWith(
           fontSize: AppTextStyles.heroAmount.fontSize! * scale,

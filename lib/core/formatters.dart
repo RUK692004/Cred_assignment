@@ -4,7 +4,18 @@
 /// Whole amounts are shown without decimals, amounts with paise keep two.
 String formatRupees(double amount) {
   final bool isWhole = amount == amount.roundToDouble();
-  final String plain = amount.abs().toStringAsFixed(isWhole ? 0 : 2);
+  return _formatRupees(amount, isWhole ? 0 : 2);
+}
+
+/// Formats [amount] as rupees that always keep two paise digits
+/// (`₹50,000.00`).
+///
+/// The statement amounts of the dashboard mirror what a bank prints on a bill,
+/// so they need the trailing `.00` that [formatRupees] drops.
+String formatRupeesWithPaise(double amount) => _formatRupees(amount, 2);
+
+String _formatRupees(double amount, int decimals) {
+  final String plain = amount.abs().toStringAsFixed(decimals);
 
   final int dot = plain.indexOf('.');
   final String whole = dot == -1 ? plain : plain.substring(0, dot);

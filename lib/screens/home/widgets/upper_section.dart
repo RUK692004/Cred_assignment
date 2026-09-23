@@ -1,15 +1,24 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/theme.dart';
+import 'cashback_banner.dart';
 import 'summary_content.dart';
-import 'summary_pill.dart';
+import 'top_controls.dart';
+import 'upper_background.dart';
 
-/// Static header of the home screen: the sliding pill plus the summary of the
-/// selected tab.
+/// Viewport height below which the promotional banner is dropped.
 ///
-/// The widget is deliberately independent from the card area below so that
-/// Phase 2 can introduce a scrolling / animated card stack underneath without
-/// rewriting this part of the screen.
+/// On a very short viewport (a phone held in landscape, a small desktop window)
+/// the card list would otherwise be squeezed into a few pixels. The statement
+/// itself always stays visible.
+const double _minBannerViewport = 520;
+
+/// Static header of the home screen.
+///
+/// Phase 2 keeps the Phase 1 structure - a top control row, the sliding pill
+/// and the statement summary - and adds the decorative [UpperBackground] plus
+/// the cashback [CashbackBanner]. The section is deliberately independent from
+/// the card area below, so only the lower list scrolls.
 class UpperSection extends StatelessWidget {
   const UpperSection({
     super.key,
@@ -19,6 +28,10 @@ class UpperSection extends StatelessWidget {
     required this.cardCount,
     required this.recentSpends,
     required this.onPayBill,
+    required this.onRewards,
+    required this.onSettings,
+    required this.onCashback,
+    this.cashbackAmount = 50,
   });
 
   final int selectedTab;
@@ -28,32 +41,61 @@ class UpperSection extends StatelessWidget {
   final double recentSpends;
   final VoidCallback onPayBill;
 
+  /// Tapped the circular "%" button.
+  final VoidCallback onRewards;
+
+  /// Tapped the settings button.
+  final VoidCallback onSettings;
+
+  /// Tapped the cashback banner.
+  final VoidCallback onCashback;
+
+  /// Cashback amount advertised by the banner, in rupees.
+  final double cashbackAmount;
+
   @override
   Widget build(BuildContext context) {
     final double scale = appScale(context);
+    final bool showBanner =
+        MediaQuery.sizeOf(context).height >= _minBannerViewport;
 
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        AppSpacing.screen,
-        8 * scale,
-        AppSpacing.screen,
-        4 * scale,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          SummaryPill(selectedIndex: selectedTab, onSelected: onTabSelected),
-          SizedBox(height: 30 * scale),
-          SummaryContent(
-            selectedTab: selectedTab,
-            statementDue: statementDue,
-            cardCount: cardCount,
-            recentSpends: recentSpends,
-            onPayBill: onPayBill,
+    return Stack(
+      children: <Widget>[
+        const Positioned.fill(child: UpperBackground()),
+        Padding(
+          padding: EdgeInsets.fromLTRB(
+            AppSpacing.screen,
+            6 * scale,
+            AppSpacing.screen,
+            4 * scale,
           ),
-        ],
-      ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              TopControls(
+                selectedTab: selectedTab,
+                onTabSelected: onTabSelected,
+                onRewards: onRewards,
+                onSettings: onSettings,
+              ),
+              SizedBox(height: 26 * scale),
+              SummaryContent(
+                selectedTab: selectedTab,
+                statementDue: statementDue,
+                cardCount: cardCount,
+                recentSpends: recentSpends,
+                onPayBill: onPayBill,
+              ),
+              if (showBanner) ...<Widget>[
+                SizedBox(height: 16 * scale),
+                CashbackBanner(cashbackAmount: cashbackAmount, onTap: onCashback),
+              ],
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
+

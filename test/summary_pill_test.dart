@@ -6,7 +6,9 @@ import 'package:flutter_test/flutter_test.dart';
 
 /// Minimal host that owns the selected index, exactly like HomeScreen does.
 class _PillHost extends StatefulWidget {
-  const _PillHost();
+  const _PillHost({this.badgeTabs = const <int>{}});
+
+  final Set<int> badgeTabs;
 
   @override
   State<_PillHost> createState() => _PillHostState();
@@ -24,6 +26,7 @@ class _PillHostState extends State<_PillHost> {
           child: SummaryPill(
             selectedIndex: _selected,
             onSelected: (int index) => setState(() => _selected = index),
+            badgeTabs: widget.badgeTabs,
           ),
         ),
       ),
@@ -103,5 +106,27 @@ void main() {
 
     expect(midX, greaterThan(startX));
     expect(midX, lessThan(endX));
+  });
+
+  testWidgets('draws the notification dot only beside a marked option', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const _PillHost());
+
+    // No option is marked, so the pill stays clean.
+    expect(find.byType(NotificationDot), findsNothing);
+
+    await tester.pumpWidget(const _PillHost(badgeTabs: <int>{kTotalDueTab}));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(NotificationDot), findsOneWidget);
+
+    // The dot sits between the two labels, right after "TOTAL DUE".
+    final double dotCenterX = tester.getCenter(find.byType(NotificationDot)).dx;
+    expect(dotCenterX, greaterThan(tester.getRect(find.text('TOTAL DUE')).right));
+    expect(
+      dotCenterX,
+      lessThan(tester.getRect(find.text('RECENT SPENDS')).left),
+    );
   });
 }
