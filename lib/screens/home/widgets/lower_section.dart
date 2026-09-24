@@ -2,18 +2,18 @@ import 'package:flutter/material.dart';
 
 import '../../../app/theme.dart';
 import '../../../models/credit_card.dart';
-import 'credit_card_widget.dart';
+import 'stacked_card_list.dart';
 
 /// Lower part of the home screen: the bank credit cards.
 ///
-/// Phase 2 replaced the single Phase 1 bill card with a plain vertical list of
-/// cards. There is deliberately no deck behaviour here: the cards neither
-/// overlap nor rotate nor react to horizontal gestures - they simply scroll,
-/// which keeps the list ready for the Phase 3 animations.
+/// The cards sit in [StackedCardList], which layers them like a physical hand
+/// of cards and scrolls through them. This section only owns the space the hand
+/// lives in - the area below the statement and the warm halo behind the cards -
+/// so the upper section is never part of a card interaction.
 class LowerSection extends StatelessWidget {
   const LowerSection({super.key, required this.cards, this.onPayNow});
 
-  /// Cards to render, in display order.
+  /// Cards to stack, the front card first.
   final List<CreditCard> cards;
 
   /// Called with the card whose "Pay now" pill was tapped.
@@ -25,7 +25,7 @@ class LowerSection extends StatelessWidget {
 
     return Stack(
       children: <Widget>[
-        // Warm halo kept from Phase 1, now sitting behind the scrolling list.
+        // Warm halo kept from Phase 1, now sitting behind the stacked cards.
         const Positioned.fill(
           child: IgnorePointer(
             child: DecoratedBox(
@@ -33,24 +33,14 @@ class LowerSection extends StatelessWidget {
             ),
           ),
         ),
-        ListView.separated(
+        Padding(
           padding: EdgeInsets.fromLTRB(
             AppSpacing.screen,
             AppSpacing.sm * scale,
             AppSpacing.screen,
             AppSpacing.xl * scale,
           ),
-          itemCount: cards.length,
-          separatorBuilder: (BuildContext context, int index) =>
-              SizedBox(height: AppSpacing.lg * scale),
-          itemBuilder: (BuildContext context, int index) {
-            final CreditCard card = cards[index];
-            return CreditCardWidget(
-              key: ValueKey<String>(card.id),
-              card: card,
-              onPayNow: onPayNow == null ? null : () => onPayNow!(card),
-            );
-          },
+          child: StackedCardList(cards: cards, onPayNow: onPayNow),
         ),
       ],
     );

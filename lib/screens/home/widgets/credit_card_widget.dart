@@ -19,8 +19,9 @@ const double _designCardHeight = 260;
 /// [CardHolderName], the optional [CardDueInformation] and the [PayNowButton] -
 /// so every bank in [BankArtwork] renders from a single [CreditCard] value.
 ///
-/// Phase 2 shows the cards flat inside an ordinary scroll view: no gestures, no
-/// rotation and no stacking are attached on purpose.
+/// The widget owns the card face only: where a card sits inside the deck is
+/// decided by the card stack that hosts it, so no gesture, rotation or
+/// stacking behaviour is attached here.
 class CreditCardWidget extends StatelessWidget {
   const CreditCardWidget({super.key, required this.card, this.onPayNow});
 

@@ -20,8 +20,9 @@ const double _recentSpendsAmount = 4280;
 ///
 /// The screen keeps the Phase 1 split:
 ///  * [UpperSection] holds the statement header. It stays pinned to the top.
-///  * [LowerSection] holds the bank cards. Phase 2 renders them as a plain
-///    vertical list, so scrolling reveals the cards one after another.
+///  * [LowerSection] holds the bank cards, stacked by `StackedCardList` into a
+///    hand the user scrolls through. It is the only part of the screen that
+///    reacts to a drag.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
