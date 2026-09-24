@@ -10,27 +10,27 @@ import 'credit_card_widget.dart';
 ///
 /// Every distance is a fraction of the card, so the hand keeps its proportions
 /// on any screen: [StackedCardGeometry] resolves the ratios against the real
-/// card size of the current layout.
+/// card size of the current layout. These are starting values - change them
+/// here and the deck follows.
 abstract final class StackedCardConfig {
   /// How much of a card stays visible behind the next one, as a fraction of the
   /// card height.
   ///
-  /// This reveal is what makes the hand read as a physical stack instead of a
-  /// list, so it is generous: roughly a third of every card behind the front
-  /// one stays exposed - enough to recognise the card and to reach its "Pay
-  /// now" pill.
-  static const double stackOffsetRatio = 0.3;
+  /// This reveal is what makes the hand read as a physical stack of cards
+  /// instead of a list: every card behind the front one is offset downwards by
+  /// this much, so a band of it stays exposed.
+  static const double stackOffsetRatio = 0.22;
 
   /// Bounds of the reveal, in logical pixels.
-  static const double minStackOffset = 40;
-  static const double maxStackOffset = 76;
+  static const double minStackOffset = 48;
+  static const double maxStackOffset = 64;
 
-  /// Cards the deck paints at once: the front card plus the cards behind it.
+  /// Cards the deck shows at once: the front card plus the cards behind it.
   static const int maxVisibleCards = 4;
 
   /// How far the finger travels to move the hand by one card, as a fraction of
   /// the card height.
-  static const double transitionRatio = 0.6;
+  static const double transitionRatio = 0.55;
   static const double minTransitionDistance = 96;
   static const double maxTransitionDistance = 150;
 
@@ -150,11 +150,14 @@ class StackedCardGeometry {
   /// Cards available to the deck.
   final int cardCount;
 
-  /// Cards painted at once.
-  int get paintedCount => math.min(StackedCardConfig.maxVisibleCards, cardCount);
-
-  /// Depth of the last card the deck shows.
-  int get maxDepth => math.max(paintedCount - 1, 0);
+  /// Depth of the deepest card the deck shows, i.e. how many cards are stacked
+  /// behind the front one.
+  ///
+  /// Cards deeper than that wait exactly behind the deepest one, so the back of
+  /// the stack always looks complete and a new card grows out of it as the hand
+  /// moves on instead of appearing all at once.
+  int get maxDepth =>
+      math.max(math.min(StackedCardConfig.maxVisibleCards, cardCount) - 1, 0);
 
   /// Height of the stack itself: the front card, the visible reveal of every
   /// card behind it and the room the shadow of the deepest card needs.
@@ -182,15 +185,6 @@ class StackedCardGeometry {
         exitTravel: exitTravel,
         maxDepth: maxDepth,
       );
-
-  /// Index of the first card of the hand.
-  ///
-  /// The hand is a sliding window of [paintedCount] cards: the card leaving the
-  /// deck stays painted until it has cleared the top edge, so no card ever pops
-  /// in or out while the user scrolls.
-  int firstPaintedIndex(double scrollProgress) {
-    return scrollProgress.floor().clamp(0, math.max(cardCount - paintedCount, 0));
-  }
 }
 
 /// Custom scroll physics that snaps the card stack to integer card positions
@@ -330,6 +324,11 @@ class _StackedCardListState extends State<StackedCardList> {
 
   /// The cards of the hand, deepest first, so the front card paints on top.
   ///
+  /// Every card of [StackedCardList.cards] is painted: a card waiting deeper
+  /// than the visible stack hides exactly behind the deepest card, and the one
+  /// sliding out is clipped by the viewport above the deck. That way the hand
+  /// has no cut-off entries and no card ever pops in or out.
+  ///
   /// The scroll view moves its content up while every card is moved down by the
   /// same amount, which pins the hand to the viewport: only the positions of
   /// [geometry] decide where a card really is.
@@ -337,16 +336,15 @@ class _StackedCardListState extends State<StackedCardList> {
     final double scrollOffset =
         _scrollController.hasClients ? _scrollController.offset : 0;
     final double scrollProgress = geometry.progressOf(scrollOffset);
-    final int firstIndex = geometry.firstPaintedIndex(scrollProgress);
 
     return Stack(
       clipBehavior: Clip.none,
       children: <Widget>[
-        for (int slot = geometry.paintedCount - 1; slot >= 0; slot--)
+        for (int index = widget.cards.length - 1; index >= 0; index--)
           _card(
             geometry,
-            firstIndex + slot,
-            scrollOffset + geometry.yOf(firstIndex + slot, scrollProgress),
+            index,
+            scrollOffset + geometry.yOf(index, scrollProgress),
           ),
       ],
     );

@@ -22,14 +22,14 @@ const String _statementTotal = '₹50,000.00';
 List<CreditCard> get _visibleCards =>
     kCreditCards.take(StackedCardConfig.maxVisibleCards).toList();
 
-/// Key the deck gives the card at [index] of [_visibleCards].
+/// Key the deck gives the card at [index] of [kCreditCards].
 ValueKey<String> _cardKey(int index) =>
-    ValueKey<String>(_visibleCards[index].id);
+    ValueKey<String>(kCreditCards[index].id);
 
 /// Finder of the card at [index] of the deck, the front card first.
 Finder _cardFinder(int index) => find.byKey(_cardKey(index));
 
-/// Finder of the card at the back of the hand.
+/// Finder of the deepest card the hand shows at rest.
 Finder get _backCard => _cardFinder(StackedCardConfig.maxVisibleCards - 1);
 
 /// Height of a card as the deck lays it out.
@@ -128,16 +128,13 @@ void main() {
 
       expect(find.byType(StackedCardList), findsOneWidget);
 
-      // Only the front cards of the hand are painted at rest. The last cards of
-      // the data stay in the deck and are reached by scrolling it.
+      // The whole hand is painted, so no card is ever cut off at the edge of
+      // the deck ...
       expect(
         kCreditCards.length,
         greaterThan(StackedCardConfig.maxVisibleCards),
       );
-      expect(
-        find.byType(CreditCardWidget),
-        findsNWidgets(StackedCardConfig.maxVisibleCards),
-      );
+      expect(find.byType(CreditCardWidget), findsNWidgets(kCreditCards.length));
 
       // The front card is the first card of the data ...
       final Rect front = tester.getRect(_cardFinder(0));
@@ -160,15 +157,26 @@ void main() {
         );
       }
 
+      // The cards past the visible depth wait exactly behind the deepest
+      // card of the hand, hidden until the hand moves on.
+      final Rect deepest = tester.getRect(
+        _cardFinder(StackedCardConfig.maxVisibleCards - 1),
+      );
+      for (int index = StackedCardConfig.maxVisibleCards;
+          index < kCreditCards.length;
+          index++) {
+        expect(
+          tester.getTopLeft(_cardFinder(index)).dy,
+          closeTo(deepest.top, 0.01),
+          reason: kCreditCards[index].bankName,
+        );
+      }
+
       // The cards really overlap, and the overlap leaves the front card
       // dominant: the card right behind it starts well above the bottom of the
-      // front card, and so does the deepest card of the hand.
-      expect(front.bottom, greaterThan(tester.getTopLeft(_backCard).dy));
+      // front card.
+      expect(front.bottom, greaterThan(deepest.top));
       expect(reveal, lessThan(front.height / 2));
-      expect(
-        tester.getTopLeft(_backCard).dy - front.top,
-        lessThan(front.height),
-      );
     });
 
     testWidgets('paints the back of the hand before the front card', (
@@ -184,8 +192,9 @@ void main() {
 
       // A Stack paints its children in order, so the deepest card is inserted
       // first and the front card last, which puts it on top of the others.
-      expect(painted.first, _cardKey(_visibleCards.length - 1));
+      expect(painted.first, ValueKey<String>(kCreditCards.last.id));
       expect(painted.last, _cardKey(0));
+      expect(painted.length, kCreditCards.length);
     });
 
     testWidgets('keeps the stack inside the card area', (
@@ -294,10 +303,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);
-      expect(
-        find.byType(CreditCardWidget),
-        findsNWidgets(StackedCardConfig.maxVisibleCards),
-      );
+      expect(find.byType(CreditCardWidget), findsNWidgets(kCreditCards.length));
       // The deck is scaled down rather than cut off, so the whole hand stays
       // inside the card area even when the viewport is very short.
       final Rect area = tester.getRect(find.byType(LowerSection));
@@ -388,20 +394,26 @@ void main() {
       expect(tiny.cardHeight, tall.cardHeight);
     });
 
-    test('paints a window of the hand that follows the scroll', () {
+    test('keeps the cards past the visible depth behind the deepest one', () {
       final StackedCardGeometry geometry = phoneGeometry();
 
-      expect(geometry.paintedCount, StackedCardConfig.maxVisibleCards);
-      // At rest the hand is the front cards of the data ...
-      expect(geometry.firstPaintedIndex(0), 0);
-      expect(geometry.firstPaintedIndex(0.9), 0);
-      // ... and it slides one card further once a card has left the deck, so
-      // the last cards of the data become the front card.
-      expect(geometry.firstPaintedIndex(1), 1);
+      expect(geometry.maxDepth, StackedCardConfig.maxVisibleCards - 1);
+
+      // While a card is deeper than the hand, it waits exactly in the deepest
+      // slot, hidden behind the card sitting there ...
+      final double deepestSlot = geometry.maxDepth * geometry.stackOffset;
+      for (final double progress in <double>[0, 0.37, 0.5, 1]) {
+        expect(geometry.yOf(4, progress), closeTo(deepestSlot, 0.01));
+      }
+
+      // ... and it rises out of the back of the stack as soon as the hand moves
+      // on, one reveal per card of scroll.
+      expect(geometry.yOf(4, 1.5), lessThan(deepestSlot));
       expect(
-        geometry.firstPaintedIndex(3),
-        kCreditCards.length - geometry.paintedCount,
+        geometry.yOf(4, 1.5),
+        closeTo(deepestSlot - geometry.stackOffset / 2, 0.01),
       );
+
       // The limit is visual only: the underlying data keeps every card.
       expect(kCreditCards.length, 5);
     });
@@ -562,11 +574,11 @@ void main() {
         tester.getTopLeft(_cardFinder(2)).dy - tester.getTopLeft(_cardFinder(1)).dy,
         closeTo(reveal, 0.5),
       );
-      // ... and the card that left the deck is gone from the hand.
-      expect(_cardFinder(0), findsNothing);
+      // ... and the card that left the deck is gone: it is still painted, but
+      // entirely above the clip of the card area.
       expect(
-        tester.getRect(_cardFinder(1)).bottom,
-        lessThanOrEqualTo(deck.bottom),
+        tester.getRect(_cardFinder(0)).bottom,
+        lessThanOrEqualTo(deck.top),
       );
     });
 

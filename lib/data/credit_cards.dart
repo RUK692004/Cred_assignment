@@ -19,8 +19,8 @@ const List<CreditCard> kCreditCards = <CreditCard>[
     cardHolderName: 'DEEP GAURAV',
     backgroundColors: <Color>[Color(0xFF1348BC), Color(0xFF06256C)],
     accent: Color(0xFF8FBEFF),
-    // The SBI reference shows the card face only, without a payment action.
-    showPayNow: false,
+    // The reference card shows its payment action like every other card.
+    showPayNow: true,
   ),
   CreditCard(
     bankName: 'IDFC FIRST Bank',
